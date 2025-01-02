@@ -89,22 +89,17 @@ Your static website is now live!
 
 ---
 
-### 4. Viewing Your Website (3 minutes)
+### 4. Viewing Your Wevsite
 
-**Script:**  
-"To view your website, open a web browser and navigate to `http://localhost` or your server’s IP address. You should see the 'Hello, World!' message we created earlier."
 
-"If you’re using a custom domain, make sure your domain’s DNS points to your server’s IP address. Once that’s set, you can access your site using the domain name."
+To view your website, open a web browser and navigate to `http://localhost` or your server’s IP address. You should see the 'Hello, World!' message we created earlier.
 
----
-
-### 5. Closing the Section (3 minutes)
-
-**Script:**  
-"That’s it! You’ve successfully hosted a static website with Nginx. You can now add more HTML, CSS, and JavaScript files to create a complete website. In the next section, we’ll take it a step further by setting up Nginx as a reverse proxy. Stay tuned!"
+If you’re using a custom domain, make sure your domain’s DNS points to your server’s IP address. Once that’s set, you can access your site using the domain name.
 
 ---
+
 
 ## Summary
+"That’s it! You’ve successfully hosted a static website with Nginx. You can now add more HTML, CSS, and JavaScript files to create a complete website. In the next section, we’ll take it a step further by setting up Nginx as a reverse proxy.
 
 In this tutorial, you learned how to host a static website using Nginx. You created a simple HTML file, configured the Nginx server block to serve it, and viewed the website in a browser. You can now continue to expand your website with additional files, or explore other Nginx functionalities.
