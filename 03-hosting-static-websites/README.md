@@ -94,7 +94,7 @@ Your static website is now live!
 
 To view your website, open a web browser and navigate to `http://localhost` or your server’s IP address. You should see the 'Hello, World!' message we created earlier.
 
-If you’re using a custom domain, make sure your domain’s DNS points to your server’s IP address. Once that’s set, you can access your site using the domain name.
+"If you’re using a custom domain, make sure your domain’s DNS points to your server’s IP address. Once that’s set, you can access your site using the domain name."
 
 ---
 

@@ -62,12 +62,38 @@ sudo yum install nginx
 brew install nginx  
 ```
 
-### Start Nginx:
+### Edit your Nginx file
 ```bash
-sudo systemctl start nginx  
+File In MAc will be at 
+sudo vim /opt/homebrew/etc/nginx/nginx.conf
 ```
 
-After installation, visit `http://localhost` in your browser to see the default Nginx welcome page!  
+You can chnage port.
+
+Then relaod nginx and restrt using these comamnds
+
+```bash
+nginx -t
+nginx -s reload
+brew services restart nginx
+```
+
+### Start Nginx:
+```bash
+sudo systemctl start nginx  #On Ubuntu
+
+brew services start nginx #on mac
+
+```
+
+### Stop Nginx:
+```bash
+sudo systemctl stop nginx  #On Ubuntu
+
+brew services stop nginx #on mac
+
+
+After installation, visit `http://localhost:8000` in your browser to see the default Nginx welcome page! port will be in your nginx file. 
 
 ---
 
