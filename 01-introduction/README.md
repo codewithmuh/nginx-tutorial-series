@@ -91,7 +91,7 @@ brew services start nginx #on mac
 sudo systemctl stop nginx  #On Ubuntu
 
 brew services stop nginx #on mac
-
+```
 
 After installation, visit `http://localhost:8000` in your browser to see the default Nginx welcome page! port will be in your nginx file. 
 
