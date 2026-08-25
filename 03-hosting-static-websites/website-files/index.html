@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Served by Nginx — Mastering Nginx</title>
+  <meta name="description" content="Demo static site for the Mastering Nginx tutorial series.">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="card">
+    <div class="badge">200 OK</div>
+    <h1>It works. This page is being served by Nginx.</h1>
+    <p>
+      You are looking at <code>website-files/index.html</code>, delivered by the
+      server block in <code>nginx-static.conf</code>. Everything under this
+      folder is now a real website.
+    </p>
+
+    <h2>Try these next</h2>
+    <ul>
+      <li><a href="/about.html">/about.html</a> — a second page, no config change needed</li>
+      <li><a href="/does-not-exist">/does-not-exist</a> — see the custom 404 page</li>
+      <li><a href="/style.css">/style.css</a> — check the <code>Cache-Control</code> header on this one</li>
+    </ul>
+
+    <h2>Watch it happen</h2>
+    <pre><code>curl -I http://localhost:8080/
+tail -f /var/log/nginx/static.access.log</code></pre>
+
+    <footer>
+      Part of the <a href="https://github.com/codewithmuh">Mastering Nginx</a> series
+      by <a href="https://youtube.com/@codewithmuh">@codewithmuh</a>.
+    </footer>
+  </main>
+</body>
+</html>
