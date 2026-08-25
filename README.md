@@ -1,39 +1,193 @@
-# Mastering Nginx: Complete Guide with Tutorials and Projects
-[![LinkedIn](https://img.shields.io/badge/Connect%20with%20me%20on-LinkedIn-blue.svg)](https://www.linkedin.com/in/muhammad-rashid-daha/)
-[![Youtube](https://img.shields.io/youtube/channel/subscribers/UC1HEefoqUWmztGZ_Laq28sw)](https://youtube.com/@codewithmuh)
-[![Medium](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/@codewithmuh)
-[![GitHub](https://img.shields.io/github/stars/codewithmuh.svg?style=social)](https://github.com/codewithmuh)
-[![Terraform](https://img.shields.io/badge/Terraform-%E2%9C%A8-lightgrey)](https://www.terraform.io)
-[![AWS](https://img.shields.io/badge/AWS-%F0%9F%9B%A1-orange)](https://aws.amazon.com)
+# Mastering Nginx — Complete Guide with Tutorials and Projects
 
+[![Configs validated](https://img.shields.io/badge/nginx%20configs-13%2F13%20validated-009639)](./scripts/validate-configs.sh)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![YouTube](https://img.shields.io/youtube/channel/subscribers/UC1HEefoqUWmztGZ_Laq28sw?label=%40codewithmuh&style=social)](https://youtube.com/@codewithmuh)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue.svg)](https://www.linkedin.com/in/muhammad-rashid-daha/)
+[![Medium](https://img.shields.io/badge/Medium-Read-black.svg)](https://medium.com/@codewithmuh)
 
-Welcome to the **Mastering Nginx** repository! This is the companion repository for my video series and articles on Nginx. Here, you'll find step-by-step examples, configuration files, and resources to help you become proficient with Nginx.
-![DEPLOY REACT ON S3](https://github.com/user-attachments/assets/f0484f4e-0841-490c-b6f2-5932796b1005)
+A hands-on Nginx course in 13 chapters, from `apt install nginx` to blue-green
+deployments — with **every config file commented line by line and validated
+against a real Nginx**.
 
-## 🚀 What You'll Learn
-- **Introduction to Nginx:** Learn the basics of how Nginx works and why it's so powerful.
-- **Hosting Static Websites:** Configure Nginx to serve static content.
-- **Reverse Proxy and Load Balancing:** Understand how to handle traffic efficiently.
-- **SSL/TLS Setup:** Secure your web applications with HTTPS.
-- **Performance Optimization:** Fine-tune Nginx for speed and reliability.
-- **Security:** Harden your Nginx configuration to protect against attacks.
-- **Advanced Topics:** Explore media streaming, debugging, monitoring, and more.
-- **Real-World Projects:** Implement practical examples and use cases.
+Companion repo for the [@codewithmuh](https://youtube.com/@codewithmuh) video
+series. Works fine on its own, too.
 
-
-
-## 🎥 Video Series
-1. [Introduction to Nginx](https://youtube.com/@codewithmuh)  
-2. [Nginx Basics](https://youtube.com/@codewithmuh)  
-...
-
-## 📖 Articles
-Find detailed write-ups for each section on [Medium](https://medium.com/@codewithmuh).
-
-## 🤝 Contributing
-Contributions are welcome! Check out the [CONTRIBUTING.md](./CONTRIBUTING.md) for details.
-
-## 📞 Contact
-Got questions or suggestions? Reach out on [LinkedIn](https://www.linkedin.com/in/muhammad-rashid-daha/).
+![Mastering Nginx](https://github.com/user-attachments/assets/f0484f4e-0841-490c-b6f2-5932796b1005)
 
 ---
+
+## Start here
+
+**Never touched Nginx?** → [Chapter 01 — Introduction](./01-introduction/)
+
+**Want something running in 30 seconds?** No install, no `sudo`:
+
+```bash
+git clone https://github.com/codewithmuh/nginx-tutorial-series.git
+cd nginx-tutorial-series/demo
+docker compose up
+```
+
+```bash
+curl http://localhost:8080/            # static site served by Nginx
+curl http://localhost:8080/api/hello   # proxied to a backend container
+```
+
+That's chapter 13's Project 1, running. Edit
+[`demo/nginx/default.conf`](./demo/nginx/default.conf), restart, watch what
+changes. Details in [`demo/README.md`](./demo/README.md).
+
+**Here to solve one specific problem?** Jump straight to it:
+
+| I want to… | Go to |
+|---|---|
+| Host a static site or SPA | [03](./03-hosting-static-websites/), [13 §1](./13-real-world-nginx-projects/) |
+| Put Nginx in front of Node/Django/Rails | [04](./04-reverse-proxy-with-nginx/) |
+| Fix a `502 Bad Gateway` | [04 §8](./04-reverse-proxy-with-nginx/#8-troubleshooting), [11 §10](./11-debuging-and-monitoring/#10-common-errors-decoded) |
+| Add free HTTPS | [06](./06-ssl-with-nginx/) |
+| Split traffic across several servers | [05](./05-load-balancing/) |
+| Redirect old URLs to new ones | [07](./07-url-rewriting-and-redirects/) |
+| Stop bots and brute-force attempts | [08](./08-security-with-nginx/) |
+| Make a slow site fast | [09](./09-optimzing-nginx-for-performance/) |
+| Stream video, or gate paid downloads | [10](./10-nginx-as-a-media-server/) |
+| Understand what my logs are telling me | [11](./11-debuging-and-monitoring/) |
+| Serve WordPress / PHP | [13 §2](./13-real-world-nginx-projects/) |
+| Deploy with zero downtime | [13 §5](./13-real-world-nginx-projects/) |
+
+---
+
+## The chapters
+
+| # | Chapter | What you'll be able to do |
+|---|---|---|
+| 01 | [Introduction](./01-introduction/) | Install Nginx, start/stop it, understand what it's for |
+| 02 | [Nginx Basics](./02-nginx-basics/) | Read any `nginx.conf`; know what every context does |
+| 03 | [Hosting Static Websites](./03-hosting-static-websites/) | Serve a real site with caching, gzip and a custom 404 |
+| 04 | [Reverse Proxy](./04-reverse-proxy-with-nginx/) | Front any app server; forward headers and WebSockets correctly |
+| 05 | [Load Balancing](./05-load-balancing/) | Spread traffic, fail over automatically, drain nodes for deploys |
+| 06 | [SSL/TLS](./06-ssl-with-nginx/) | Free auto-renewing HTTPS, A+ rated, with HSTS |
+| 07 | [Rewriting & Redirects](./07-url-rewriting-and-redirects/) | Move URLs without breaking links; `root` vs `alias` for good |
+| 08 | [Security](./08-security-with-nginx/) | Rate limits, security headers, IP rules, hidden-file blocking |
+| 09 | [Performance](./09-optimzing-nginx-for-performance/) | Caching, compression, keepalive — and how to measure the gain |
+| 10 | [Media Server](./10-nginx-as-a-media-server/) | Byte ranges, HLS, throttling, signed URLs for paid content |
+| 11 | [Debugging & Monitoring](./11-debuging-and-monitoring/) | Logs worth reading, trace IDs, metrics, health checks |
+| 12 | [Best Practices](./12-best-practises-and-resources/) | Maintainable config layout, deploy ritual, production checklist |
+| 13 | [Real-World Projects](./13-real-world-nginx-projects/) | SPA+API, WordPress, API gateway, maintenance mode, blue-green |
+
+Each chapter is a `README.md` you can read on its own, plus a fully commented
+`.conf` file you can copy.
+
+---
+
+## Every config here actually works
+
+No config in this repo is aspirational. They are all checked against a real
+Nginx binary:
+
+```bash
+./scripts/validate-configs.sh
+```
+
+```
+PASS  ./01-introduction/example-config.conf
+PASS  ./02-nginx-basics/basic-confg.conf
+...
+13 passed, 0 failed
+All configs are valid.
+```
+
+It uses Docker (`nginx:alpine`) when available so results are identical
+everywhere, and falls back to a locally installed `nginx`. Run it before
+sending a pull request.
+
+---
+
+## How to use a config from this repo
+
+The `.conf` files are server blocks meant to be dropped in as a site file:
+
+```bash
+# Ubuntu / Debian
+sudo cp 03-hosting-static-websites/nginx-static.conf /etc/nginx/sites-available/mysite.conf
+sudo ln -s /etc/nginx/sites-available/mysite.conf /etc/nginx/sites-enabled/
+
+# CentOS / RHEL / Fedora
+sudo cp 03-hosting-static-websites/nginx-static.conf /etc/nginx/conf.d/mysite.conf
+
+# macOS (Homebrew)
+cp 03-hosting-static-websites/nginx-static.conf /opt/homebrew/etc/nginx/servers/
+
+# Then, always:
+sudo nginx -t          # validate BEFORE reloading
+sudo nginx -s reload   # graceful reload, no dropped connections
+```
+
+Edit the `server_name`, `root` and certificate paths for your own setup.
+[Chapter 02](./02-nginx-basics/) explains why the file is laid out that way.
+
+**The one habit worth building:** `nginx -t` before every reload. If it fails,
+your old config is still running and nothing broke.
+
+---
+
+## Repository layout
+
+```
+nginx-tutorial-series/
+├── 01-introduction/ … 13-real-world-nginx-projects/
+│   ├── README.md                  # the chapter
+│   └── *.conf                     # annotated, validated config
+├── 03-hosting-static-websites/
+│   └── website-files/             # a real demo site to serve
+├── demo/                          # docker compose stack you can run now
+│   ├── compose.yaml
+│   ├── nginx/default.conf
+│   └── api/server.js
+├── scripts/
+│   └── validate-configs.sh        # checks every .conf with real nginx
+├── CONTRIBUTING.md
+└── LICENSE
+```
+
+---
+
+## Requirements
+
+Nothing, to read. To follow along:
+
+- **Nginx 1.18+** — `nginx -v` (the `http2 on;` syntax in ch. 06 needs 1.25.1+)
+- **A terminal and `sudo`** on the machine you're configuring
+- **Docker** *(optional)* — for the demo stack and the validator
+- **A domain + server** *(only for ch. 06)* — HTTPS needs a real domain
+
+No prior Nginx knowledge assumed. Basic comfort with the command line helps.
+
+---
+
+## Video series & articles
+
+Chapters map to videos on [@codewithmuh](https://youtube.com/@codewithmuh), with
+written versions on [Medium](https://medium.com/@codewithmuh). Each chapter
+stands alone — you don't need the video to follow the text.
+
+## Contributing
+
+Found a mistake, or have a config that saved your day? Pull requests welcome —
+see [CONTRIBUTING.md](./CONTRIBUTING.md). Run `./scripts/validate-configs.sh`
+before you open one.
+
+## License
+
+[MIT](./LICENSE) — use these configs anywhere, including at work.
+
+## Contact
+
+Questions or suggestions:
+[LinkedIn](https://www.linkedin.com/in/muhammad-rashid-daha/) ·
+[YouTube](https://youtube.com/@codewithmuh) ·
+[Medium](https://medium.com/@codewithmuh)
+
+---
+
+⭐ If this saved you an afternoon, a star helps other people find it.

@@ -1,133 +1,224 @@
+# 02 — Nginx Basics
 
-# Nginx Basics
-
-This guide provides an introduction to Nginx basics, covering configuration structure, key directives, and service management. It is designed to help beginners develop a solid foundation for working with Nginx.
+Nginx configuration is a small language: a handful of **contexts** that nest,
+and **directives** that live inside them. Learn the shape once and every config
+you meet afterwards is readable — including the intimidating ones you'll find
+on Stack Overflow.
 
 ---
 
 ## Table of Contents
 
-1. [Introduction](#introduction)
-2. [Configuration File Structure](#configuration-file-structure)
-3. [Key Directives](#key-directives)
-4. [Starting and Managing Nginx](#starting-and-managing-nginx)
-5. [Next Steps](#next-steps)
-6. [Resources](#resources)
+1. [The shape of a config](#1-the-shape-of-a-config)
+2. [Contexts](#2-contexts)
+3. [Directives you'll use constantly](#3-directives-youll-use-constantly)
+4. [Location blocks and matching order](#4-location-blocks-and-matching-order)
+5. [Variables](#5-variables)
+6. [Includes](#6-includes)
+7. [Managing the service](#7-managing-the-service)
+8. [Troubleshooting](#8-troubleshooting)
 
 ---
 
-## Introduction
+## 1. The shape of a config
 
-Nginx is a powerful web server and reverse proxy used widely for web application delivery. This guide will help you:
+Every Nginx config is contexts nested inside contexts:
 
-- Understand the Nginx configuration structure.
-- Learn key directives for setting up Nginx.
-- Manage the Nginx service confidently.
-
----
-
-## Configuration File Structure
-
-The main configuration file for Nginx is `nginx.conf`, typically located in `/etc/nginx/`. It is structured into hierarchical contexts:
-
-1. **Main Context**: Contains global settings (e.g., `worker_processes`).
-2. **HTTP Context**: Defines behavior for HTTP traffic, such as caching and server blocks.
-3. **Server Blocks**: Handles domain or application-specific configurations.
-
-### Example Configuration
 ```nginx
-worker_processes  1;  # Main context  
+# main context — the process itself
+worker_processes auto;
 
-http {  
-    server {        # Server block  
-        listen 80;  
-        server_name example.com;  
-        root /var/www/html;  # Document root  
-        index index.html;    # Default index file  
-    }  
+events {                          # how workers accept connections
+    worker_connections 1024;
+}
+
+http {                            # everything about serving HTTP
+    include mime.types;
+    gzip on;
+
+    server {                      # one virtual host
+        listen 80;
+        server_name example.com;
+
+        location / {              # one group of URLs
+            root /var/www/html;
+        }
+    }
 }
 ```
-This example:
 
-- Listens on port 80.
-- Serves files from `/var/www/html`.
-- Uses `index.html` as the default file.
+Two rules explain most of what happens:
+
+- **Directives inherit downwards.** `gzip on;` in `http` applies to every server
+  and location below it.
+- **A directive at a deeper level overrides the inherited one.** `gzip off;` in
+  one location affects only that location.
+
+Every directive is only legal in certain contexts. The
+[directive index](https://nginx.org/en/docs/dirindex.html) lists the allowed
+context for each — worth bookmarking, because "unknown directive" almost always
+means "right directive, wrong context".
+
+## 2. Contexts
+
+| Context | Contains | Examples |
+|---|---|---|
+| **main** | Process-level settings | `user`, `worker_processes`, `pid`, `error_log` |
+| **events** | Connection handling | `worker_connections`, `multi_accept` |
+| **http** | Everything HTTP | `gzip`, `log_format`, `include`, `upstream` |
+| **server** | One virtual host | `listen`, `server_name`, `root`, `ssl_certificate` |
+| **location** | One group of URLs | `try_files`, `proxy_pass`, `expires`, `alias` |
+| **upstream** | A pool of backends | `server`, `keepalive`, `least_conn` |
+
+[`basic-confg.conf`](./basic-confg.conf) in this folder is a complete nginx.conf
+with all of them annotated. Test-drive it without touching your system config:
+
+```bash
+nginx -p $(pwd) -c 02-nginx-basics/basic-confg.conf -t
+```
+
+## 3. Directives you'll use constantly
+
+```nginx
+listen 80;                    # port
+listen 443 ssl;               # port + TLS
+listen [::]:80;               # IPv6
+
+server_name example.com www.example.com;   # which Host header we answer
+server_name *.example.com;                 # wildcard
+server_name _;                             # catch-all
+
+root  /var/www/html;          # URI is APPENDED to this path
+index index.html index.htm;   # served when the URI is a directory
+
+try_files $uri $uri/ =404;    # first thing that exists wins
+return 301 https://$host$request_uri;      # redirect
+
+access_log /var/log/nginx/site.access.log;
+error_log  /var/log/nginx/site.error.log warn;
+```
+
+Every directive ends in a semicolon. A missing one produces a confusing error
+several lines later — `nginx -t` will point at it.
+
+### Serving two sites from one server
+
+That's all `server_name` is for:
+
+```nginx
+server {
+    listen 80;
+    server_name example.com;
+    root /var/www/example;
+}
+
+server {
+    listen 80;
+    server_name blog.example.com;
+    root /var/www/blog;
+}
+```
+
+Same port, same machine. Nginx picks the block by the `Host` header the browser
+sent. If none match, the **first** block for that port wins — which is why
+chapter 08 recommends an explicit catch-all.
+
+## 4. Location blocks and matching order
+
+Locations decide how a group of URLs is handled — and they are **not** checked
+top to bottom:
+
+```nginx
+location = /health      { }   # 1. exact match — wins immediately
+location ^~ /assets/    { }   # 2. prefix match that stops regex checking
+location ~* \.(jpg|png)$ { }  # 3. regex (~* = case-insensitive), file order
+location /               { }  # 4. longest plain prefix — the fallback
+```
+
+The order Nginx actually uses:
+
+1. Exact `=` match → done.
+2. Longest `^~` prefix → done, regexes skipped.
+3. Regexes `~` / `~*`, **in the order written in the file** → first match wins.
+4. Otherwise, the longest plain prefix match.
+
+> This trips up nearly everyone. A regex block near the bottom of your file can
+> beat a prefix block at the top. When a location "isn't working", check this
+> order first.
+
+Use `=` for hot endpoints like `/health` — it's the fastest match Nginx can do.
+
+## 5. Variables
+
+Nginx exposes the request as variables, and you'll see them everywhere:
+
+| Variable | Value |
+|---|---|
+| `$uri` | Normalised path, no query string (`/about`) |
+| `$request_uri` | Full original URI **with** query string (`/about?x=1`) |
+| `$host` | Hostname from the request |
+| `$scheme` | `http` or `https` |
+| `$remote_addr` | Client IP |
+| `$args` / `$query_string` | The query string |
+| `$request_method` | `GET`, `POST`, … |
+| `$status` | Response status code |
+
+The `$uri` / `$request_uri` distinction matters in redirects: use
+`$request_uri` when you want the query string preserved.
+
+Full list: [nginx.org/en/docs/varindex.html](https://nginx.org/en/docs/varindex.html)
+
+## 6. Includes
+
+Split config into files and pull them in:
+
+```nginx
+include /etc/nginx/conf.d/*.conf;
+include /etc/nginx/sites-enabled/*;
+include snippets/ssl-params.conf;
+```
+
+This is how `sites-available` / `sites-enabled` works: real files in one
+directory, symlinks in the other, and enabling a site means creating a link.
+Chapter 12 covers the layout worth adopting.
+
+## 7. Managing the service
+
+```bash
+sudo nginx -t            # validate the config
+sudo nginx -T            # print the FULL merged config (every include resolved)
+sudo nginx -V            # version + compiled-in modules
+
+sudo systemctl reload nginx     # apply changes gracefully
+sudo systemctl restart nginx    # full restart — drops connections
+sudo systemctl status nginx
+```
+
+Two flags to remember:
+
+- **`nginx -t` before every reload.** If it fails, the running config is
+  untouched and your site stays up.
+- **`nginx -T` when a change "does nothing".** It shows what Nginx actually
+  loaded, which is sometimes not the file you edited.
+
+## 8. Troubleshooting
+
+| Message | Meaning |
+|---|---|
+| `unknown directive "x"` | Wrong context, a typo, or a module that isn't compiled in — check `nginx -V` |
+| `directive "x" is not allowed here` | Right directive, wrong context |
+| `unexpected "}"` | A missing semicolon on the line above |
+| `conflicting server name` | Two server blocks claim the same name and port |
+| `duplicate location` | Same location path defined twice in one server block |
+| `directory index of "/x/" is forbidden` | No `index` file present and `autoindex` is off |
+| Change has no effect | Editing a file nothing includes — verify with `nginx -T` |
 
 ---
 
-## Key Directives
+## Files
 
-Here are some essential directives to know:
+- [`basic-confg.conf`](./basic-confg.conf) — a complete annotated `nginx.conf`
 
-- **listen**: Specifies the port or IP address for Nginx to listen on.
-    ```nginx
-    listen 80;  # HTTP  
-    listen 443 ssl;  # HTTPS  
-    ```
+## Next
 
-- **server_name**: Defines the domain name for the server block.
-    ```nginx
-    server_name example.com www.example.com;  
-    ```
-
-- **root and index**: Sets the document root and default file.
-    ```nginx
-    root /var/www/html;  
-    index index.html index.htm;  
-    ```
-
-- **location**: Configures how specific requests are handled.
-    ```nginx
-    location /images/ {  
-        root /var/www/media;  
-    }
-    ```
-
-These directives form the backbone of any Nginx configuration.
-
----
-
-## Starting and Managing Nginx
-
-### Common Commands
-
-- **Start Nginx**:
-    ```bash
-    sudo systemctl start nginx
-    ```
-
-- **Stop Nginx**:
-    ```bash
-    sudo systemctl stop nginx
-    ```
-
-- **Reload Configuration**:
-    ```bash
-    sudo systemctl reload nginx
-    ```
-
-- **Test Configuration**:
-    ```bash
-    sudo nginx -t
-    ```
-    Always test your configuration to ensure there are no syntax errors before reloading.
-
----
-
-## Next Steps
-
-With a solid understanding of the basics, you're ready to move on to more advanced topics. Next, consider learning about:
-
-- Hosting a static website with Nginx.
-- Setting up HTTPS with SSL/TLS.
-- Using Nginx as a reverse proxy for backend services.
-
----
-
-## Resources
-
-- [Nginx Documentation](https://nginx.org/en/docs/)
-- [Static Website Hosting with Nginx](Insert relevant link)
-- [YouTube Video: Nginx Basics](Insert your video link)
-
-Enhance your skills further by experimenting with configurations and exploring additional use cases for Nginx.
+[03 — Hosting Static Websites](../03-hosting-static-websites/) — put this to work.

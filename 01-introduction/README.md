@@ -1,111 +1,220 @@
-# Mastering Nginx - Introduction
+# 01 — Introduction to Nginx
 
-Welcome to this introductory guide on Nginx! This README summarizes the key points covered in the **"Introduction to Nginx"** video, giving you an overview of its features, uses, and installation process. Whether you're a developer, system administrator, or just curious, this guide is for you. Let’s dive in!
-
----
-
-## What is Nginx?
-Nginx (pronounced "Engine X") is a powerful open-source software primarily used as a web server. But its versatility extends much further. Nginx can also function as:  
-- **Reverse Proxy**: Distributes requests to backend servers.  
-- **Load Balancer**: Efficiently manages traffic across multiple servers.  
-- **Content Caching System**: Improves performance by serving cached resources.  
-- **Media Streaming Server**: Seamlessly delivers audio and video content.  
-
-### Key Features:
-- High performance and low resource usage.  
-- Handles massive numbers of simultaneous connections.  
-- Originally created by Igor Sysoev in 2004 to solve the "C10k problem" (handling 10,000 simultaneous connections efficiently).  
-
-![Nginx Architecture](https://via.placeholder.com/800x400 "Diagram of Nginx Architecture")
+Welcome. By the end of this chapter you'll have Nginx installed, running, and
+serving a page — and you'll know what it's actually for.
 
 ---
 
-## Why Choose Nginx?
-Nginx is widely popular for its:
+## Table of Contents
 
-1. **Scalability**: Its event-driven architecture handles thousands of connections simultaneously.  
-2. **Versatility**: Functions as a web server, reverse proxy, load balancer, and more.  
-3. **Performance**: Outperforms traditional web servers like Apache for static content and high-traffic handling.  
-4. **Widespread Adoption**: Trusted by industry giants like Netflix, Airbnb, and WordPress.com.  
-
----
-
-## Differences Between Nginx and Apache
-While both Nginx and Apache are powerful web servers, they differ in several ways:  
-
-| Feature             | Nginx                  | Apache                 |
-|---------------------|------------------------|------------------------|
-| **Architecture**    | Event-driven           | Process-driven         |
-| **Static Content**  | Faster serving         | Slower serving         |
-| **Configurations**  | Centralized in one file | Distributed with `.htaccess` files |
-
-*Nginx is often preferred for modern, high-performance applications.*
+1. [What is Nginx?](#1-what-is-nginx)
+2. [Why people choose it](#2-why-people-choose-it)
+3. [Nginx vs Apache](#3-nginx-vs-apache)
+4. [Installing](#4-installing)
+5. [Starting and stopping](#5-starting-and-stopping)
+6. [Where the config lives](#6-where-the-config-lives)
+7. [Your first change](#7-your-first-change)
+8. [Troubleshooting](#8-troubleshooting)
 
 ---
 
-## Installing Nginx
-Here's how to install Nginx on various platforms:  
+## 1. What is Nginx?
 
-### Ubuntu:
-```bash
-sudo apt update  
-sudo apt install nginx  
+Nginx (pronounced "engine X") is a web server — but that undersells it. The same
+binary is also:
+
+- **Reverse proxy** — takes requests and forwards them to your app *(ch. 04)*
+- **Load balancer** — spreads traffic across many servers *(ch. 05)*
+- **Cache** — stores responses so your backend stops repeating itself *(ch. 09)*
+- **TLS terminator** — handles HTTPS so your app doesn't have to *(ch. 06)*
+- **Media server** — streams video with seeking and throttling *(ch. 10)*
+
+In practice, most production Nginx installs do several of these at once.
+
+It was written by Igor Sysoev in 2004 to solve the **C10k problem**: how to
+serve 10,000 simultaneous connections on one machine. Apache's answer at the
+time was a process or thread per connection, which runs out of memory long
+before 10,000. Nginx uses an **event loop** instead — a small, fixed number of
+worker processes, each juggling thousands of connections, none of them blocked
+waiting on a slow client.
+
+That one architectural decision is why Nginx uses so little memory under load,
+and it's worth understanding early. Everything else in this series follows from
+it.
+
+```
+        Apache (prefork)                    Nginx (event-driven)
+
+   request ─▶ [process] ─┐            request ─┐
+   request ─▶ [process] ─┼─▶ files    request ─┼─▶ [worker] ─▶ files
+   request ─▶ [process] ─┘            request ─┘   (one process,
+   (one process each,                              thousands of
+    memory grows fast)                             connections)
 ```
 
-### CentOS:
+## 2. Why people choose it
+
+| | |
+|---|---|
+| **Speed on static files** | Hands files from disk to socket inside the kernel (`sendfile`) |
+| **Low, predictable memory** | Concurrency doesn't multiply processes |
+| **One tool, many jobs** | Web server, proxy, balancer, cache — same config language |
+| **Everywhere** | Powers a large share of the busiest sites on the internet |
+| **Great docs** | [nginx.org/en/docs](https://nginx.org/en/docs/) is precise and complete |
+
+## 3. Nginx vs Apache
+
+Both are excellent. They differ in ways that matter:
+
+| | Nginx | Apache |
+|---|---|---|
+| **Architecture** | Event-driven, async | Process/thread per connection *(mpm_event narrows this)* |
+| **Static files** | Very fast | Slower |
+| **Config** | Central files, no per-directory overrides | `.htaccess` per directory |
+| **Dynamic content** | Proxies to PHP-FPM / app servers | Can embed interpreters (`mod_php`) |
+| **Config reload** | Graceful, zero dropped connections | Graceful too |
+
+The `.htaccess` difference is the practical one: Apache checks for those files
+on *every request*, which is convenient on shared hosting and slow everywhere
+else. Nginx has no equivalent — all config is central, read once at startup.
+That's why an Nginx change needs a reload, and why it's faster.
+
+## 4. Installing
+
+**Ubuntu / Debian**
+
 ```bash
-sudo yum install nginx  
+sudo apt update
+sudo apt install nginx
 ```
 
-### macOS (via Homebrew):
+**CentOS / RHEL / Fedora**
+
 ```bash
-brew install nginx  
+sudo dnf install nginx      # or: sudo yum install nginx
 ```
 
-### Edit your Nginx file
+**macOS (Homebrew)**
+
 ```bash
-File In MAc will be at 
-sudo vim /opt/homebrew/etc/nginx/nginx.conf
+brew install nginx
 ```
 
-You can chnage port.
-
-Then relaod nginx and restrt using these comamnds
+**Docker** — no install at all:
 
 ```bash
-nginx -t
-nginx -s reload
+docker run --rm -p 8080:80 nginx:alpine
+```
+
+Confirm it's there, and note the version — a few directives in later chapters
+depend on it:
+
+```bash
+nginx -v
+```
+
+## 5. Starting and stopping
+
+**Linux (systemd)**
+
+```bash
+sudo systemctl start nginx
+sudo systemctl stop nginx
+sudo systemctl reload nginx      # apply config changes, no dropped connections
+sudo systemctl enable nginx      # start on boot
+sudo systemctl status nginx
+```
+
+**macOS (Homebrew)**
+
+```bash
+brew services start nginx
+brew services stop nginx
 brew services restart nginx
 ```
 
-### Start Nginx:
+**Anywhere**
+
 ```bash
-sudo systemctl start nginx  #On Ubuntu
-
-brew services start nginx #on mac
-
+sudo nginx -t          # test the config — do this before every reload
+sudo nginx -s reload   # graceful reload
+sudo nginx -s quit     # graceful shutdown
 ```
 
-### Stop Nginx:
-```bash
-sudo systemctl stop nginx  #On Ubuntu
+> **Reload, don't restart.** A reload starts new workers with the new config
+> while the old ones finish their in-flight requests. A restart drops every
+> connection. And if `nginx -t` fails, the running config is untouched — which
+> is exactly why you test first.
 
-brew services stop nginx #on mac
+Now visit **http://localhost** (Ubuntu/CentOS) or **http://localhost:8080**
+(Homebrew default) and you should see the Nginx welcome page.
+
+## 6. Where the config lives
+
+| Platform | Main config | Site configs |
+|---|---|---|
+| Ubuntu/Debian | `/etc/nginx/nginx.conf` | `/etc/nginx/sites-available/` + symlink into `sites-enabled/` |
+| CentOS/RHEL | `/etc/nginx/nginx.conf` | `/etc/nginx/conf.d/*.conf` |
+| macOS (Apple Silicon) | `/opt/homebrew/etc/nginx/nginx.conf` | `/opt/homebrew/etc/nginx/servers/` |
+| macOS (Intel) | `/usr/local/etc/nginx/nginx.conf` | `/usr/local/etc/nginx/servers/` |
+
+Not sure? Ask Nginx itself:
+
+```bash
+nginx -t         # prints the path of the config it tested
+nginx -V         # shows --conf-path and every compiled-in module
 ```
 
-After installation, visit `http://localhost:8000` in your browser to see the default Nginx welcome page! port will be in your nginx file. 
+Logs are usually in `/var/log/nginx/` (`access.log` and `error.log`). When
+something is broken, `error.log` almost always says why.
+
+## 7. Your first change
+
+Homebrew's Nginx listens on 8080 by default; Linux packages use 80. Either way,
+changing the port is a good first edit:
+
+```bash
+sudo nano /etc/nginx/nginx.conf          # macOS: /opt/homebrew/etc/nginx/nginx.conf
+```
+
+Find the `listen` line and change the port:
+
+```nginx
+server {
+    listen 8000;          # was 80
+    server_name localhost;
+    ...
+}
+```
+
+Then the ritual you'll repeat for the rest of your career:
+
+```bash
+sudo nginx -t            # 1. validate
+sudo nginx -s reload     # 2. apply
+curl -I http://localhost:8000/    # 3. verify
+```
+
+[`example-config.conf`](./example-config.conf) in this folder is a complete,
+commented version of a minimal site config — read it next.
+
+## 8. Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `bind() to 0.0.0.0:80 failed (98: Address already in use)` | Apache or another Nginx has the port: `sudo ss -tlnp \| grep :80` |
+| Welcome page doesn't load | Is it running? `systemctl status nginx`. Firewall? `sudo ufw allow 'Nginx Full'` |
+| `nginx: command not found` after brew install | `/opt/homebrew/bin` isn't on your `PATH` |
+| Changes have no effect | You edited a file nothing includes — check with `nginx -T` |
+| Permission denied on port 80 | Ports below 1024 need root: use `sudo` |
 
 ---
 
-## Closing Thoughts
-In this introduction, we covered:  
-- What Nginx is and its key features.  
-- Why Nginx is a popular choice for modern applications.  
-- How to install Nginx on different platforms.  
+## Files
 
-In the next section, we’ll dive deeper into Nginx configurations to customize it for your needs. Stay tuned!  
+- [`example-config.conf`](./example-config.conf) — a minimal, fully commented server block
 
----
+## Next
 
-### Feedback
-If you have questions or feedback, feel free to reach out. Let’s master Nginx together!
+[02 — Nginx Basics](../02-nginx-basics/) — read and write any Nginx config with
+confidence.

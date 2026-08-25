@@ -1,0 +1,22 @@
+# Local nginx test artifacts
+*.pid
+*.log
+logs/
+cache/
+
+# Certificates — never commit these
+*.pem
+*.key
+*.crt
+*.csr
+certs/
+
+# Editor / OS noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Dependencies (the demo API deliberately has none)
+node_modules/
