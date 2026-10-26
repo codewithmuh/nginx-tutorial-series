@@ -1,10 +1,18 @@
 # Mastering Nginx — Complete Guide with Tutorials and Projects
 
-[![Configs validated](https://img.shields.io/badge/nginx%20configs-13%2F13%20validated-009639)](./scripts/validate-configs.sh)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
-[![YouTube](https://img.shields.io/youtube/channel/subscribers/UC1HEefoqUWmztGZ_Laq28sw?label=%40codewithmuh&style=social)](https://youtube.com/@codewithmuh)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue.svg)](https://www.linkedin.com/in/muhammad-rashid-daha/)
-[![Medium](https://img.shields.io/badge/Medium-Read-black.svg)](https://medium.com/@codewithmuh)
+<p align="center">
+  <a href="https://github.com/codewithmuh/nginx-tutorial-series/releases"><img src="https://img.shields.io/github/v/release/codewithmuh/nginx-tutorial-series?color=blue&label=version&style=flat-square" alt="GitHub Release"></a>
+  <a href="./scripts/validate-configs.sh"><img src="https://img.shields.io/badge/nginx%20configs-13%2F13%20validated-009639?style=flat-square" alt="Configs validated"></a>
+  <a href="https://github.com/codewithmuh/nginx-tutorial-series/stargazers"><img src="https://img.shields.io/github/stars/codewithmuh/nginx-tutorial-series?style=flat-square" alt="Stars"></a>
+  <a href="https://github.com/codewithmuh/nginx-tutorial-series/network/members"><img src="https://img.shields.io/github/forks/codewithmuh/nginx-tutorial-series?style=flat-square" alt="Forks"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg?style=flat-square" alt="License"></a>
+  <a href="https://youtube.com/@codewithmuh"><img src="https://img.shields.io/badge/YouTube-%40codewithmuh-FF0000?style=flat-square&logo=youtube&logoColor=white" alt="YouTube"></a>
+  <a href="https://www.linkedin.com/in/muhammad-rashid-daha/"><img src="https://img.shields.io/badge/LinkedIn-Connect-blue.svg?style=flat-square&logo=linkedin" alt="LinkedIn"></a>
+  <br>
+  <img src="https://img.shields.io/badge/Nginx-1.25%2B-009639?style=flat-square&logo=nginx&logoColor=white" alt="Nginx">
+  <img src="https://img.shields.io/badge/Docker-Compose%20Ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/Security-SSL%20%7C%20Rate%20Limit%20%7C%20Hardened-orange?style=flat-square" alt="Security">
+</p>
 
 A hands-on Nginx course in 13 chapters, from `apt install nginx` to blue-green
 deployments — with **every config file commented line by line and validated
@@ -12,6 +20,23 @@ against a real Nginx**.
 
 Companion repo for the [@codewithmuh](https://youtube.com/@codewithmuh) video
 series. Works fine on its own, too.
+
+```mermaid
+flowchart TD
+    Client["Client Request (HTTPS / HTTP)"] --> Nginx["Nginx Reverse Proxy & Load Balancer<br/>(TLS Termination + Rate Limiting + Caching)"]
+    
+    subgraph Routing["Routing & Traffic Distribution"]
+        Nginx -->|/static/| Static["Static Files & SPA Assets (/var/www/html)"]
+        Nginx -->|/api/| Upstream["Upstream Backend Pool (Round Robin / Least Conn)"]
+        Nginx -->|/media/| Media["Media Streaming Cache"]
+    end
+    
+    subgraph Backends["Application Services"]
+        Upstream --> App1["App Node 1 (:8001)"]
+        Upstream --> App2["App Node 2 (:8002)"]
+        Upstream --> App3["App Node 3 (:8003)"]
+    end
+```
 
 ![Mastering Nginx](https://github.com/user-attachments/assets/f0484f4e-0841-490c-b6f2-5932796b1005)
 
